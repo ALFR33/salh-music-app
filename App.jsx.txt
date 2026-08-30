@@ -1,326 +1,479 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Play, Pause, Download, Music, Disc, Search, Sparkles, Volume2, VolumeX, SkipForward, SkipBack, Zap, Swords, Heart, Wind, Radio, Loader2, Guitar, Layers, Database, Globe, Infinity as InfinityIcon, Youtube, ShieldCheck, Copy, Check, ExternalLink, Facebook, Film, Clapperboard, Feather } from "lucide-react";
-
-interface Track {
-  id: string;
-  title: string;
-  category: string;
-  categoryLabel: string;
-  clipId: string;
-  isOriginal?: boolean;
-}
-
-const ORIGINAL_TRACKS: Track[] = [
-  { id: "orig-1", title: "Accept Defeat", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "d3f9e375-5095-4f16-8e35-27bee530b2f3", isOriginal: true },
-  { id: "orig-2", title: "Hollow Kings", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "9b1d7b16-a195-42af-b2a6-08a275ecb88e", isOriginal: true },
-  { id: "orig-3", title: "Imperial Blade", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "1538a6f4-334a-4011-a84b-6143a45807cd", isOriginal: true },
-  { id: "orig-4", title: "The Red Sultan", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "be50a4d2-2ccc-4e55-9fed-b8bd44b416ee", isOriginal: true },
-  { id: "orig-5", title: "Iron Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "eda2ab60-81cf-46e9-ad89-d1f6ab29b7f3", isOriginal: true },
-  { id: "orig-6", title: "Desert Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "166fafbc-a79d-4bef-9cb0-df3029ce62c5", isOriginal: true },
-  { id: "orig-7", title: "Blood Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "16c56e5e-bbb0-4299-af98-762423f4d1d0", isOriginal: true },
-  { id: "orig-8", title: "Bosphorus Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "46c22b7b-3cf2-4013-a6b8-e47b7677f882", isOriginal: true },
-  { id: "orig-9", title: "Silent Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "c299484d-b853-4415-9c73-4dd7cec8686d", isOriginal: true },
-  { id: "orig-10", title: "Blood Ties", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "d6268887-4808-4817-b246-23efe07c2b59", isOriginal: true },
-  { id: "orig-11", title: "Silent Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "ca83d524-3963-4b95-8451-c6d5f97c7f8e", isOriginal: true },
-  { id: "orig-12", title: "Bosphorus Blood", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "7efe8a66-64f6-47da-b08e-caf6baa32aef", isOriginal: true },
-  { id: "orig-13", title: "Solo Saz Street Beat", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "263040cb-cea7-41c8-b211-37c3fea64174", isOriginal: true },
-  { id: "orig-14", title: "Turkish Saz Club Trap", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "71467911-ae22-46f2-91ce-6131bd987457", isOriginal: true },
-  { id: "orig-15", title: "Dark Oriental Drill", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "0deaf12e-b29a-4cab-b41f-4952222e288f", isOriginal: true },
-  { id: "orig-16", title: "Stack It High", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "05a032f7-6202-45f0-bdd0-0f847528cc41", isOriginal: true },
-  { id: "orig-17", title: "BARE KNUCKLE KING", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "c258d5df-280b-4183-bf3c-8e1df59f7b7b", isOriginal: true },
-  { id: "orig-18", title: "Anatolian Fury", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "4434b2b7-7792-455b-8db9-6fbe4b57b190", isOriginal: true },
-  { id: "orig-19", title: "Anatolian Rush", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "9701b86d-7adc-430c-9d9d-e46bab129753", isOriginal: true },
-  { id: "orig-20", title: "Anatolian Pursuit", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "6d5fe077-5cdf-43d2-901f-890c19d104c9", isOriginal: true },
-  { id: "orig-21", title: "Anatolian Vendetta", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "d354ed63-f48d-4c23-aab5-603314e757a1", isOriginal: true }
-];
-
-const TEMPLATE_CLIPS = ORIGINAL_TRACKS.map(t => t.clipId);
-
-const CATEGORIES = [
-  { id: "all", name: "الكل (30 مليار)", icon: InfinityIcon },
-  { id: "native", name: "الهنود الحمر والقبايل", icon: Feather },
-  { id: "cinema", name: "أفلام ومسلسلات عالمية", icon: Film },
-  { id: "arab_tv", name: "دراما عربية ومصرية وسورية وسعودية", icon: Clapperboard },
-  { id: "world", name: "موسيقى الشعوب (مكسيكي، صيني، كوري، إيطالي...)", icon: Globe },
-  { id: "relax", name: "استرخاء وجمال الكون", icon: Wind },
-  { id: "trance", name: "ترانس وريمكس ودي جي", icon: Zap },
-  { id: "war", name: "قتالية وحربيات وعسكرية", icon: Swords },
-  { id: "hiphop", name: "راب وهيب هوب وتراك", icon: Disc },
-  { id: "oriental", name: "يرغول ومجوز وشرقي", icon: Music },
-  { id: "cinematic", name: "تيتانيك وملحمي", icon: Sparkles }
-];
-
-const GENRE_PREFIXES: Record<string, string[]> = {
-  native: ["Native American Flute", "Ancient Tribal Drums", "Shamanic Chant Ritual", "Apache Wind Symphony", "Spirit Warrior Chant", "Mohawk Flute Solitude"],
-  cinema: ["Hollywood Blockbuster Suite", "Titanic Romantic Violin", "Epic Thriller Theme", "Mystery Detective Score", "SuperHero Action Anthem", "Fantasy Kingdom Waltz"],
-  arab_tv: ["موسيقى مسلسل درامي عربي", "تتر مسلسل مصري أصيل", "موسيقى بيئة شامية وسورية", "ملحمة دراما سعودية وخليجية", "أنغام السواحل والبادية العربية", "حزن وتقاسيم القانون والناي"],
-  world: ["Mexican Telenovela Romance", "Chinese Guzheng Dynasty", "Korean OST Heartbreak", "Italian Opera Serenade", "Russian Epic Orchestra", "Brazilian Phonk & Samba", "American Country Roads"],
-  relax: ["Cosmic Meditation Symphony", "Galaxy Starfall Ambient", "Beautiful Universe Waves", "Deep Forest Rain Serenity", "Golden Sunset Piano", "Infinite Cosmic Harmony"],
-  trance: ["Psytrance Pulsar Rave", "DJ Club Anthem Remix", "Electro Festival Bounce", "Techno Deep Underground", "EDM Slap House Hit", "Hardstyle Energy Storm"],
-  war: ["Battlefield War Drums", "Military March of Honor", "Gladiator Sword Anthem", "Spartan Armor Strike", "Tactical Combat Assault", "Heroic Vanguard March"],
-  hiphop: ["Street UK Drill Heavy", "Hard 808 Trap Banger", "Boom Bap Golden Era", "Phonk Drift Underground", "Raw Dark Rap Beat", "Freestyle Bass Cipher"],
-  oriental: ["يرغول ودبكة زوري", "مجوز وصياح العريس", "تقاسيم بزق وكمان شرقي", "سلطنة العود والقانون", "دبكة شباب الشمال", "موليه وناي بدوي"],
-  cinematic: ["Titanic Emotional Strings", "Gran Symphony Finale", "Melancholic Cello Solo", "Valiant Knight Overture", "Ethereal Celestial Choir", "Majestic Horizon March"]
-};
-
-const TOTAL_TRACKS = 30000000000;
-const PAGE_SIZE = 40;
-const YOUTUBE_URL = "https://www.youtube.com/@SalhAlheibKlel";
-const FACEBOOK_URL = "https://www.facebook.com/salhalheibkle";
-
-export default function Component() {
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(ORIGINAL_TRACKS[0]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.8);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const getAudioUrl = (clipId: string) => {
-    return `https://storage.googleapis.com/producer-app-public/clips/${clipId}.m4a`;
-  };
-
-  const currentCategoryKeys = useMemo(() => {
-    if (activeCategory === "all") {
-      return Object.keys(GENRE_PREFIXES);
-    }
-    return [activeCategory];
-  }, [activeCategory]);
-
-  const pageTracks = useMemo(() => {
-    const tracks: Track[] = [];
-
-    if (currentPage === 1 && searchQuery === "") {
-      ORIGINAL_TRACKS.forEach(t => {
-        if (activeCategory === "all" || t.category === activeCategory) {
-          tracks.push(t);
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salh Alheib Klel | المكتبة الموسيقية الرسمية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        .line-clamp-1 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
         }
-      });
-    }
+    </style>
+</head>
+<body class="min-h-screen w-full flex flex-col items-center bg-slate-950 text-slate-100 pb-36">
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const catKeys = currentCategoryKeys;
+    <!-- Header Banner -->
+    <header class="w-full bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border-b border-slate-800 py-10 px-4 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-blue-500/5 backdrop-blur-3xl pointer-events-none"></div>
+        <div class="max-w-5xl mx-auto flex flex-col items-center gap-4 relative z-10">
+            <div class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+                <i class="fa-solid fa-shield-check"></i> المكتبة الفنية الرسمية الشاملة
+            </div>
 
-    for (let i = 0; i < PAGE_SIZE; i++) {
-      const globalIdx = startIndex + i + 1;
-      const key = catKeys[globalIdx % catKeys.length];
-      const list = GENRE_PREFIXES[key] || GENRE_PREFIXES.cinema;
-      const prefix = list[globalIdx % list.length];
+            <h1 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-400 bg-clip-text text-transparent">
+                Salh Alheib Klel
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base max-w-2xl">
+                أرشيف الموسيقى العالمي والشامل (30 مليار مقطوعة) • استرخاء، ترانس، هيب هوب، دراما عربية وعالمية، قتالية، موسيقى الشعوب، واستماع وتحميل مباشر
+            </p>
 
-      let categoryLabel = "عالمي وسينمائي";
-      if (key === "native") categoryLabel = "الهنود الحمر والقبايل";
-      if (key === "cinema") categoryLabel = "أفلام ومسلسلات عالمية";
-      if (key === "arab_tv") categoryLabel = "دراما عربية ومصرية وسورية وسعودية";
-      if (key === "world") categoryLabel = "موسيقى الشعوب والدول";
-      if (key === "relax") categoryLabel = "استرخاء وجمال الكون";
-      if (key === "trance") categoryLabel = "ترانس وريمكس ودي جي";
-      if (key === "war") categoryLabel = "قتالية وحربيات وعسكرية";
-      if (key === "hiphop") categoryLabel = "Hip Hop & Beats";
-      if (key === "oriental") categoryLabel = "يرغول وشرقي أصيل";
-      if (key === "cinematic") categoryLabel = "تيتانيك وملحمي";
+            <!-- Social Links -->
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-2">
+                <button onclick="window.open('https://www.youtube.com/@SalhAlheibKlel', '_blank', 'noopener,noreferrer')" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs md:text-sm shadow-lg shadow-red-900/30 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    <i class="fa-brands fa-youtube"></i> القناة الرسمية على YouTube
+                    <i class="fa-solid fa-external-link opacity-70 text-xs"></i>
+                </button>
 
-      const clipId = TEMPLATE_CLIPS[globalIdx % TEMPLATE_CLIPS.length];
-      const title = `${prefix} #${globalIdx.toLocaleString()}`;
+                <button onclick="window.open('https://www.facebook.com/salhalheibkle', '_blank', 'noopener,noreferrer')" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs md:text-sm shadow-lg shadow-blue-900/30 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    <i class="fa-brands fa-facebook"></i> الصفحة الرسمية على Facebook
+                    <i class="fa-solid fa-external-link opacity-70 text-xs"></i>
+                </button>
 
-      if (searchQuery === "" || title.toLowerCase().includes(searchQuery.toLowerCase()) || categoryLabel.toLowerCase().includes(searchQuery.toLowerCase())) {
-        tracks.push({
-          id: `proc-${globalIdx}`,
-          title,
-          category: key,
-          categoryLabel,
-          clipId
-        });
-      }
-    }
+                <button onclick="copyToClipboard('https://www.youtube.com/@SalhAlheibKlel', 'yt')" class="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 cursor-pointer">
+                    <i id="copyIcon" class="fa-solid fa-copy"></i>
+                    <span id="copyText">نسخ رابط يوتيوب</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-    return tracks;
-  }, [currentPage, activeCategory, searchQuery, currentCategoryKeys]);
+    <!-- Main Container -->
+    <main class="w-full max-w-7xl px-4 py-8 flex flex-col gap-6">
+        <!-- Search & Stats Bar -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl backdrop-blur-md">
+            <div class="relative w-full md:w-96">
+                <i class="fa-solid fa-search absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                <input
+                    type="text"
+                    id="searchInput"
+                    oninput="handleSearch(this.value)"
+                    placeholder="ابحث في الـ 30 مليار مقطوعة..."
+                    class="w-full bg-slate-950 border border-slate-800 text-slate-100 pr-10 pl-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                />
+            </div>
 
-  const totalPages = useMemo(() => {
-    return Math.floor(TOTAL_TRACKS / PAGE_SIZE);
-  }, []);
+            <div class="flex items-center gap-3 text-xs text-slate-400 font-mono bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-800/80">
+                <i class="fa-solid fa-database text-blue-400"></i>
+                <span>الأرشيف الإجمالي: <strong class="text-blue-400">30,000,000,000</strong> مقطوعة</span>
+            </div>
+        </div>
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
+        <!-- Categories Bar -->
+        <div id="categoriesContainer" class="flex items-center gap-2 overflow-x-auto pb-2">
+            <!-- Rendered dynamically -->
+        </div>
 
-  const handlePlayTrack = (track: Track) => {
-    if (currentTrack?.id === track.id) {
-      if (isPlaying) {
-        audioRef.current?.pause();
-        setIsPlaying(false);
-      } else {
-        audioRef.current?.play();
-        setIsPlaying(true);
-      }
-    } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-      if (audioRef.current) {
-        audioRef.current.src = getAudioUrl(track.clipId);
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    }
-  };
+        <!-- Tracks Grid -->
+        <div id="tracksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+            <!-- Rendered dynamically -->
+        </div>
 
-  const copyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedLink(type);
-    setTimeout(() => setCopiedLink(null), 2500);
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setProgress(audioRef.current.currentTime);
-      setDuration(audioRef.current.duration || 0);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return "0:00";
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
-  return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-slate-950 text-slate-100 font-sans pb-36 dir-rtl">
-      <header className="w-full bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border-b border-slate-800 py-10 px-4 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-3xl pointer-events-none" />
-        <div className="max-w-5xl mx-auto flex flex-col items-center gap-4 relative z-10">
-          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4" /> المكتبة الفنية الرسمية الشاملة
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-400 bg-clip-text text-transparent">
-            Salh Alheib Klel
-          </h1>
-          <p className="text-slate-400 text-sm md:text-base max-w-2xl">
-            أرشيف الموسيقى العالمي والشامل (30 مليار مقطوعة) • استرخاء، ترانس، هيب هوب، دراما عربية وعالمية، قتالية، موسيقى الشعوب، واستماع وتحميل مباشر
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
-            <button onClick={() => window.open(YOUTUBE_URL, "_blank", "noopener,noreferrer")} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold text-xs md:text-sm shadow-lg transition-all">
-              <Youtube className="w-4 h-4 fill-white" /> القناة الرسمية على YouTube
-              <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+        <!-- Pagination Bar -->
+        <div class="flex items-center justify-between gap-4 mt-6 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
+            <button
+                id="prevPageBtn"
+                onclick="changePage(-1)"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
+            >
+                <i class="fa-solid fa-chevron-right"></i> الصفحة السابقة
             </button>
-            <button onClick={() => window.open(FACEBOOK_URL, "_blank", "noopener,noreferrer")} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs md:text-sm shadow-lg transition-all">
-              <Facebook className="w-4 h-4 fill-white" /> الصفحة الرسمية على Facebook
-              <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+
+            <span class="text-xs text-slate-400 font-mono" id="pageIndicator">
+                صفحة <strong class="text-blue-400">1</strong> من <strong class="text-slate-300">750,000,000</strong>
+            </span>
+
+            <button
+                id="nextPageBtn"
+                onclick="changePage(1)"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
+            >
+                الصفحة التالية <i class="fa-solid fa-chevron-left"></i>
             </button>
-          </div>
         </div>
-      </header>
+    </main>
 
-      <main className="w-full max-w-7xl px-4 py-8 flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="ابحث في الأرشيف..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-100 pr-10 pl-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400 font-mono bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-800">
-            <Database className="w-4 h-4 text-blue-400" />
-            <span>الإجمالي: <strong className="text-blue-400">30,000,000,000</strong> مقطوعة</span>
-          </div>
-        </div>
+    <!-- Floating Audio Player Bar -->
+    <div id="floatingPlayer" class="fixed bottom-0 left-0 w-full bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-xl z-50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
+        <audio
+            id="audioElement"
+            ontimeupdate="handleTimeUpdate()"
+            onended="setIsPlaying(false)"
+            crossorigin="anonymous"
+        ></audio>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isActive = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                  isActive ? "bg-blue-600 text-white border-blue-500 shadow-md" : "bg-slate-900/80 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200"
-                }`}
-              >
-                <Icon className="w-4 h-4" /> {cat.name}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-          {pageTracks.map((track) => {
-            const isSelected = currentTrack?.id === track.id;
-            const isTrackPlaying = isSelected && isPlaying;
-            return (
-              <div key={track.id} className={`flex flex-col justify-between p-5 rounded-2xl border transition-all ${isSelected ? "bg-gradient-to-b from-blue-950/40 to-slate-900 border-blue-500/50 shadow-lg" : "bg-slate-900/60 border-slate-800 hover:border-slate-700"}`}>
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{track.categoryLabel}</span>
-                      {track.isOriginal && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">أصلي 100%</span>}
-                    </div>
-                    <h3 className="text-base font-bold text-slate-100 line-clamp-1">{track.title}</h3>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> © Salh Alheib Klel
-                    </p>
-                  </div>
-                  <button onClick={() => handlePlayTrack(track)} className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 ${isTrackPlaying ? "bg-blue-600 text-white shadow-md" : "bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white"}`}>
-                    {isTrackPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-800/60">
-                  <a href={getAudioUrl(track.clipId)} download={`${track.title}.m4a`} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-colors">
-                    <Download className="w-3.5 h-3.5" /> تحميل M4A / MP3
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between gap-4 mt-6 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-          <button disabled={currentPage <= 1} onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold disabled:opacity-40">
-            <SkipBack className="w-4 h-4" /> الصفحة السابقة
-          </button>
-          <span className="text-xs text-slate-400 font-mono">صفحة <strong className="text-blue-400">{currentPage.toLocaleString()}</strong> من <strong className="text-slate-300">{totalPages.toLocaleString()}</strong></span>
-          <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold disabled:opacity-40">
-            الصفحة التالية <SkipForward className="w-4 h-4" />
-          </button>
-        </div>
-      </main>
-
-      {currentTrack && (
-        <div className="fixed bottom-0 left-0 w-full bg-slate-900/95 border-t border-slate-800 p-4 backdrop-blur-xl z-50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
-          <audio ref={audioRef} src={getAudioUrl(currentTrack.clipId)} onTimeUpdate={handleTimeUpdate} onEnded={() => setIsPlaying(false)} crossOrigin="anonymous" />
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
-              <Music className="w-5 h-5 text-blue-400 animate-pulse" />
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-music text-blue-400 animate-pulse"></i>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-100 line-clamp-1">{currentTrack.title}</h4>
-              <p className="text-xs text-blue-400 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Salh Alheib Klel • {currentTrack.categoryLabel}
-              </p>
+                <h4 id="playerTrackTitle" class="text-sm font-bold text-slate-100 line-clamp-1">Accept Defeat</h4>
+                <p id="playerTrackCategory" class="text-xs text-blue-400 flex items-center gap-1">
+                    <i class="fa-solid fa-shield-check"></i> Salh Alheib Klel • Hip Hop & Beats
+                </p>
             </div>
-          </div>
-          <div className="flex flex-col items-center gap-2 w-full md:w-1/2 max-w-xl">
-            <button onClick={() => handlePlayTrack(currentTrack)} className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg">
-              {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-            </button>
-            <div className="w-full flex items-center gap-3 text-xs text-slate-400 font-mono">
-              <span>{formatTime(progress)}</span>
-              <input type="range" min="0" max={duration || 100} value={progress} onChange={(e) => { const val = Number(e.target.value); setProgress(val); if (audioRef.current) audioRef.current.currentTime = val; }} className="w-full accent-blue-500 bg-slate-950 rounded-lg h-1.5 cursor-pointer" />
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
         </div>
-      )}
+
+        <div class="flex flex-col items-center gap-2 w-full md:w-1/2 max-w-xl">
+            <div class="flex items-center gap-4">
+                <button
+                    onclick="toggleMasterPlay()"
+                    id="masterPlayBtn"
+                    class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-900/50 cursor-pointer"
+                >
+                    <i id="masterPlayIcon" class="fa-solid fa-play ml-0.5"></i>
+                </button>
+            </div>
+
+            <div class="w-full flex items-center gap-3 text-xs text-slate-400 font-mono">
+                <span id="currentTimeText">0:00</span>
+                <input
+                    type="range"
+                    id="seekSlider"
+                    min="0"
+                    max="100"
+                    value="0"
+                    oninput="seekAudio(this.value)"
+                    class="w-full accent-blue-500 bg-slate-950 rounded-lg h-1.5 cursor-pointer"
+                />
+                <span id="durationText">0:00</span>
+            </div>
+        </div>
+
+        <div class="hidden md:flex items-center gap-2">
+            <i id="volumeIcon" class="fa-solid fa-volume-high text-slate-400 text-sm"></i>
+            <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.8"
+                oninput="changeVolume(this.value)"
+                class="w-20 accent-blue-500 bg-slate-950 rounded-lg h-1.5 cursor-pointer"
+            />
+        </div>
     </div>
-  );
-}
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-800/80 py-8 px-4 text-center text-xs text-slate-500 flex flex-col items-center gap-3">
+        <p>© 2026 Salh Alheib Klel. جميع الحقوق محفوظة للفنان والمؤلف.</p>
+        <div class="flex items-center gap-4 text-slate-400">
+            <a href="https://www.youtube.com/@SalhAlheibKlel" target="_blank" rel="noopener noreferrer" class="hover:text-red-400 transition-colors flex items-center gap-1">
+                <i class="fa-brands fa-youtube"></i> YouTube
+            </a>
+            <span>•</span>
+            <a href="https://www.facebook.com/salhalheibkle" target="_blank" rel="noopener noreferrer" class="hover:text-blue-400 transition-colors flex items-center gap-1">
+                <i class="fa-brands fa-facebook"></i> Facebook
+            </a>
+        </div>
+    </footer>
+
+    <!-- JavaScript Engine (Exact Translation of React Logic) -->
+    <script>
+        const ORIGINAL_TRACKS = [
+            { id: "orig-1", title: "Accept Defeat", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "d3f9e375-5095-4f16-8e35-27bee530b2f3", isOriginal: true },
+            { id: "orig-2", title: "Hollow Kings", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "9b1d7b16-a195-42af-b2a6-08a275ecb88e", isOriginal: true },
+            { id: "orig-3", title: "Imperial Blade", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "1538a6f4-334a-4011-a84b-6143a45807cd", isOriginal: true },
+            { id: "orig-4", title: "The Red Sultan", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "be50a4d2-2ccc-4e55-9fed-b8bd44b416ee", isOriginal: true },
+            { id: "orig-5", title: "Iron Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "eda2ab60-81cf-46e9-ad89-d1f6ab29b7f3", isOriginal: true },
+            { id: "orig-6", title: "Desert Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "166fafbc-a79d-4bef-9cb0-df3029ce62c5", isOriginal: true },
+            { id: "orig-7", title: "Blood Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "16c56e5e-bbb0-4299-af98-762423f4d1d0", isOriginal: true },
+            { id: "orig-8", title: "Bosphorus Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "46c22b7b-3cf2-4013-a6b8-e47b7677f882", isOriginal: true },
+            { id: "orig-9", title: "Silent Debt", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "c299484d-b853-4415-9c73-4dd7cec8686d", isOriginal: true },
+            { id: "orig-10", title: "Blood Ties", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "d6268887-4808-4817-b246-23efe07c2b59", isOriginal: true },
+            { id: "orig-11", title: "Silent Vendetta", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "ca83d524-3963-4b95-8451-c6d5f97c7f8e", isOriginal: true },
+            { id: "orig-12", title: "Bosphorus Blood", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "7efe8a66-64f6-47da-b08e-caf6baa32aef", isOriginal: true },
+            { id: "orig-13", title: "Solo Saz Street Beat", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "263040cb-cea7-41c8-b211-37c3fea64174", isOriginal: true },
+            { id: "orig-14", title: "Turkish Saz Club Trap", category: "oriental", categoryLabel: "أناشيد ومقطوعات شرقية", clipId: "71467911-ae22-46f2-91ce-6131bd987457", isOriginal: true },
+            { id: "orig-15", title: "Dark Oriental Drill", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "0deaf12e-b29a-4cab-b41f-4952222e288f", isOriginal: true },
+            { id: "orig-16", title: "Stack It High", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "05a032f7-6202-45f0-bdd0-0f847528cc41", isOriginal: true },
+            { id: "orig-17", title: "BARE KNUCKLE KING", category: "hiphop", categoryLabel: "Hip Hop & Beats", clipId: "c258d5df-280b-4183-bf3c-8e1df59f7b7b", isOriginal: true },
+            { id: "orig-18", title: "Anatolian Fury", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "4434b2b7-7792-455b-8db9-6fbe4b57b190", isOriginal: true },
+            { id: "orig-19", title: "Anatolian Rush", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "9701b86d-7adc-430c-9d9d-e46bab129753", isOriginal: true },
+            { id: "orig-20", title: "Anatolian Pursuit", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "6d5fe077-5cdf-43d2-901f-890c19d104c9", isOriginal: true },
+            { id: "orig-21", title: "Anatolian Vendetta", category: "cinematic", categoryLabel: "أنماط سينمائية وملحمية", clipId: "d354ed63-f48d-4c23-aab5-603314e757a1", isOriginal: true }
+        ];
+
+        const TEMPLATE_CLIPS = ORIGINAL_TRACKS.map(t => t.clipId);
+
+        const CATEGORIES = [
+            { id: "all", name: "الكل (30 مليار)", icon: "fa-infinity" },
+            { id: "native", name: "الهنود الحمر والقبايل", icon: "fa-feather" },
+            { id: "cinema", name: "أفلام ومسلسلات عالمية", icon: "fa-film" },
+            { id: "arab_tv", name: "دراما عربية ومصرية وسورية وسعودية", icon: "fa-clapperboard" },
+            { id: "world", name: "موسيقى الشعوب", icon: "fa-globe" },
+            { id: "relax", name: "استرخاء وجمال الكون", icon: "fa-wind" },
+            { id: "trance", name: "ترانس وريمكس ودي جي", icon: "fa-bolt" },
+            { id: "war", name: "قتالية وحربيات وعسكرية", icon: "fa-khanda" },
+            { id: "hiphop", name: "راب وهيب هوب وتراك", icon: "fa-compact-disc" },
+            { id: "oriental", name: "يرغول ومجوز وشرقي", icon: "fa-music" },
+            { id: "cinematic", name: "تيتانيك وملحمي", icon: "fa-wand-magic-sparkles" }
+        ];
+
+        const GENRE_PREFIXES = {
+            native: ["Native American Flute", "Ancient Tribal Drums", "Shamanic Chant Ritual", "Apache Wind Symphony", "Spirit Warrior Chant", "Mohawk Flute Solitude"],
+            cinema: ["Hollywood Blockbuster Suite", "Titanic Romantic Violin", "Epic Thriller Theme", "Mystery Detective Score", "SuperHero Action Anthem", "Fantasy Kingdom Waltz"],
+            arab_tv: ["موسيقى مسلسل درامي عربي", "تتر مسلسل مصري أصيل", "موسيقى بيئة شامية وسورية", "ملحمة دراما سعودية وخليجية", "أنغام السواحل والبادية العربية", "حزن وتقاسيم القانون والناي"],
+            world: ["Mexican Telenovela Romance", "Chinese Guzheng Dynasty", "Korean OST Heartbreak", "Italian Opera Serenade", "Russian Epic Orchestra", "Brazilian Phonk & Samba", "American Country Roads"],
+            relax: ["Cosmic Meditation Symphony", "Galaxy Starfall Ambient", "Beautiful Universe Waves", "Deep Forest Rain Serenity", "Golden Sunset Piano", "Infinite Cosmic Harmony"],
+            trance: ["Psytrance Pulsar Rave", "DJ Club Anthem Remix", "Electro Festival Bounce", "Techno Deep Underground", "EDM Slap House Hit", "Hardstyle Energy Storm"],
+            war: ["Battlefield War Drums", "Military March of Honor", "Gladiator Sword Anthem", "Spartan Armor Strike", "Tactical Combat Assault", "Heroic Vanguard March"],
+            hiphop: ["Street UK Drill Heavy", "Hard 808 Trap Banger", "Boom Bap Golden Era", "Phonk Drift Underground", "Raw Dark Rap Beat", "Freestyle Bass Cipher"],
+            oriental: ["يرغول ودبكة زوري", "مجوز وصياح العريس", "تقاسيم بزق وكمان شرقي", "سلطنة العود والقانون", "دبكة شباب الشمال", "موليه وناي بدوي"],
+            cinematic: ["Titanic Emotional Strings", "Gran Symphony Finale", "Melancholic Cello Solo", "Valiant Knight Overture", "Ethereal Celestial Choir", "Majestic Horizon March"]
+        };
+
+        const TOTAL_TRACKS = 30000000000;
+        const PAGE_SIZE = 40;
+
+        let activeCategory = "all";
+        let searchQuery = "";
+        let currentPage = 1;
+        let currentTrack = ORIGINAL_TRACKS[0];
+        let isPlaying = false;
+
+        const audioElement = document.getElementById('audioElement');
+
+        function getAudioUrl(clipId) {
+            return `https://storage.googleapis.com/producer-app-public/clips/${clipId}.m4a`;
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = CATEGORIES.map(cat => {
+                const isActive = activeCategory === cat.id;
+                return `
+                    <button onclick="setActiveCategory('${cat.id}')" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/40' : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'}">
+                        <i class="fa-solid ${cat.icon}"></i> ${cat.name}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setActiveCategory(catId) {
+            activeCategory = catId;
+            currentPage = 1;
+            renderCategories();
+            renderTracks();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.trim();
+            currentPage = 1;
+            renderTracks();
+        }
+
+        function getCurrentCategoryKeys() {
+            if (activeCategory === "all") {
+                return Object.keys(GENRE_PREFIXES);
+            }
+            return [activeCategory];
+        }
+
+        function renderTracks() {
+            const tracks = [];
+            if (currentPage === 1 && searchQuery === "") {
+                ORIGINAL_TRACKS.forEach(t => {
+                    if (activeCategory === "all" || t.category === activeCategory) {
+                        tracks.push(t);
+                    }
+                });
+            }
+
+            const startIndex = (currentPage - 1) * PAGE_SIZE;
+            const catKeys = getCurrentCategoryKeys();
+
+            for (let i = 0; i < PAGE_SIZE; i++) {
+                const globalIdx = startIndex + i + 1;
+                const key = catKeys[globalIdx % catKeys.length];
+                const list = GENRE_PREFIXES[key] || GENRE_PREFIXES.cinema;
+                const prefix = list[globalIdx % list.length];
+
+                let categoryLabel = "عالمي وسينمائي";
+                if (key === "native") categoryLabel = "الهنود الحمر والقبايل";
+                if (key === "cinema") categoryLabel = "أفلام ومسلسلات عالمية";
+                if (key === "arab_tv") categoryLabel = "دراما عربية ومصرية وسورية وسعودية";
+                if (key === "world") categoryLabel = "موسيقى الشعوب والدول";
+                if (key === "relax") categoryLabel = "استرخاء وجمال الكون";
+                if (key === "trance") categoryLabel = "ترانس وريمكس ودي جي";
+                if (key === "war") categoryLabel = "قتالية وحربيات وعسكرية";
+                if (key === "hiphop") categoryLabel = "Hip Hop & Beats";
+                if (key === "oriental") categoryLabel = "يرغول وشرقي أصيل";
+                if (key === "cinematic") categoryLabel = "تيتانيك وملحمي";
+
+                const clipId = TEMPLATE_CLIPS[globalIdx % TEMPLATE_CLIPS.length];
+                const title = `${prefix} #${globalIdx.toLocaleString()}`;
+
+                if (searchQuery === "" || title.toLowerCase().includes(searchQuery.toLowerCase()) || categoryLabel.toLowerCase().includes(searchQuery.toLowerCase())) {
+                    tracks.push({
+                        id: `proc-${globalIdx}`,
+                        title,
+                        category: key,
+                        categoryLabel,
+                        clipId
+                    });
+                }
+            }
+
+            const totalPages = Math.floor(TOTAL_TRACKS / PAGE_SIZE);
+            document.getElementById('pageIndicator').innerHTML = `صفحة <strong class="text-blue-400">${currentPage.toLocaleString()}</strong> من <strong class="text-slate-300">${totalPages.toLocaleString()}</strong>`;
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+
+            const grid = document.getElementById('tracksGrid');
+            grid.innerHTML = tracks.map(track => {
+                const isSelected = currentTrack?.id === track.id;
+                const isTrackPlaying = isSelected && isPlaying;
+
+                return `
+                    <div class="flex flex-col justify-between p-5 rounded-2xl border transition-all ${isSelected ? 'bg-gradient-to-b from-blue-950/40 to-slate-900 border-blue-500/50 shadow-lg shadow-blue-950/50' : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900'}">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                        ${track.categoryLabel}
+                                    </span>
+                                    ${track.isOriginal ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">أصلي 100%</span>' : ''}
+                                </div>
+                                <h3 class="text-base font-bold text-slate-100 line-clamp-1">${track.title}</h3>
+                                <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-shield-check text-blue-400 text-xs"></i> © Salh Alheib Klel • جميع الحقوق محفوظة
+                                </p>
+                            </div>
+
+                            <button onclick='handlePlayTrack(${JSON.stringify(track)})' class="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 cursor-pointer ${isTrackPlaying ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white'}">
+                                <i class="fa-solid ${isTrackPlaying ? 'fa-pause' : 'fa-play ml-0.5'}"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-3 border-t border-slate-800/60">
+                            <a href="${getAudioUrl(track.clipId)}" download="${track.title}.m4a" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-colors">
+                                <i class="fa-solid fa-download text-xs"></i> تحميل M4A / MP3
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handlePlayTrack(track) {
+            if (currentTrack?.id === track.id) {
+                if (isPlaying) {
+                    audioElement.pause();
+                    isPlaying = false;
+                } else {
+                    audioElement.play();
+                    isPlaying = true;
+                }
+            } else {
+                currentTrack = track;
+                isPlaying = true;
+                audioElement.src = getAudioUrl(track.clipId);
+                audioElement.play().catch(() => isPlaying = false);
+            }
+            updatePlayerUI();
+            renderTracks();
+        }
+
+        function toggleMasterPlay() {
+            if (!currentTrack) return;
+            if (isPlaying) {
+                audioElement.pause();
+                isPlaying = false;
+            } else {
+                audioElement.play().catch(() => isPlaying = false);
+                isPlaying = true;
+            }
+            updatePlayerUI();
+            renderTracks();
+        }
+
+        function updatePlayerUI() {
+            if (currentTrack) {
+                document.getElementById('playerTrackTitle').innerText = currentTrack.title;
+                document.getElementById('playerTrackCategory').innerHTML = `<i class="fa-solid fa-shield-check"></i> Salh Alheib Klel • ${currentTrack.categoryLabel}`;
+            }
+            const icon = document.getElementById('masterPlayIcon');
+            icon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play ml-0.5";
+        }
+
+        function handleTimeUpdate() {
+            if (audioElement) {
+                const current = audioElement.currentTime;
+                const total = audioElement.duration || 0;
+                document.getElementById('currentTimeText').innerText = formatTime(current);
+                document.getElementById('durationText').innerText = formatTime(total);
+                if (total > 0) {
+                    document.getElementById('seekSlider').value = (current / total) * 100;
+                }
+            }
+        }
+
+        function seekAudio(val) {
+            if (audioElement && audioElement.duration) {
+                audioElement.currentTime = (val / 100) * audioElement.duration;
+            }
+        }
+
+        function changeVolume(val) {
+            if (audioElement) {
+                audioElement.volume = Number(val);
+                const volIcon = document.getElementById('volumeIcon');
+                if (Number(val) === 0) {
+                    volIcon.className = "fa-solid fa-volume-xmark text-slate-400 text-sm";
+                } else {
+                    volIcon.className = "fa-solid fa-volume-high text-slate-400 text-sm";
+                }
+            }
+        }
+
+        function formatTime(time) {
+            if (isNaN(time)) return "0:00";
+            const mins = Math.floor(time / 60);
+            const secs = Math.floor(time % 60);
+            return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.floor(TOTAL_TRACKS / PAGE_SIZE);
+            currentPage = Math.max(1, Math.min(totalPages, currentPage + direction));
+            renderTracks();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyToClipboard(text, type) {
+            navigator.clipboard.writeText(text);
+            const icon = document.getElementById('copyIcon');
+            const span = document.getElementById('copyText');
+            icon.className = "fa-solid fa-check text-green-400";
+            span.innerText = "تم النسخ!";
+            setTimeout(() => {
+                icon.className = "fa-solid fa-copy";
+                span.innerText = "نسخ رابط يوتيوب";
+            }, 2500);
+        }
+
+        // Initial render
+        renderCategories();
+        renderTracks();
+        audioElement.src = getAudioUrl(ORIGINAL_TRACKS[0].clipId);
+        audioElement.volume = 0.8;
+    </script>
+</body>
+</html>
