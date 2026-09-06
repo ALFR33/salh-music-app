@@ -477,3 +477,491 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Synthesizer Studio | Salh Alheib Klel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 950: '#020617', 900: '#0f172a', 850: '#172033', 800: '#1e293b', 700: '#334155' },
+                        indigo: { 600: '#4f46e5', 500: '#6366f1', 400: '#818cf8', 300: '#a5b4fc' },
+                        purple: { 600: '#9333ea', 500: '#a855f7', 400: '#c084fc' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-slate-100 p-4 font-sans select-none">
+
+    <!-- Header Banner -->
+    <div class="w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-2xl backdrop-blur">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-gradient-to-tr from-indigo-500 to-pink-500 rounded-2xl shadow-lg shadow-indigo-500/30">
+                ✨
+            </div>
+            <div>
+                <h1 class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
+                    Pro Synthesizer Studio | Salh Alheib Klel
+                </h1>
+                <p class="text-xs text-slate-400">استوديو العزف والتأليف الموسيقي الاحترافي</p>
+            </div>
+        </div>
+
+        <!-- Recording / Export Controls -->
+        <div class="flex items-center gap-2">
+            <button id="rec-btn" onclick="toggleRecording()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all cursor-pointer">
+                🎙️ بدء التسجيل
+            </button>
+            <a id="download-link" href="#" download="Salh_Alheib_Klel_Pro_Studio_Track.webm" class="hidden flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all">
+                📥 تحميل الصوت
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Studio Console -->
+    <div class="w-full max-w-4xl bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-col gap-6">
+        
+        <!-- Visualizer & Preset Selector -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Visualizer Canvas -->
+            <div class="md:col-span-2 bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2 relative overflow-hidden">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-400 z-10">
+                    <span class="flex items-center gap-1.5 text-indigo-400">
+                        📡 Spectrum Analyzer (60FPS)
+                    </span>
+                    <span class="text-emerald-400">LIVE AUDIO DSP</span>
+                </div>
+                <canvas id="spectrumCanvas" width="500" height="120" class="w-full h-28 rounded-xl bg-slate-900/50"></canvas>
+            </div>
+
+            <!-- Sound Presets -->
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between gap-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                        🎹 اختيارات الآلات (Sound Presets)
+                    </span>
+                    <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-[10px] font-bold">
+                        <button onclick="setVersion('V100')" id="ver-V100" class="px-2 py-0.5 rounded text-slate-400 cursor-pointer">V100</button>
+                        <button onclick="setVersion('V200')" id="ver-V200" class="px-2 py-0.5 rounded text-slate-400 cursor-pointer">V200</button>
+                        <button onclick="setVersion('V300')" id="ver-V300" class="px-2 py-0.5 rounded bg-purple-600 text-white cursor-pointer">V300</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="setPreset('piano')" id="preset-piano" class="p-2.5 rounded-xl font-bold transition-all border text-right bg-purple-600 text-white border-purple-400 shadow-md cursor-pointer">🎹 Felt Piano</button>
+                    <button onclick="setPreset('lead')" id="preset-lead" class="p-2.5 rounded-xl font-bold transition-all border text-right bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer">⚡ Trance Lead</button>
+                    <button onclick="setPreset('pad')" id="preset-pad" class="p-2.5 rounded-xl font-bold transition-all border text-right bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer">🌌 Warm Pad</button>
+                    <button onclick="setPreset('bass')" id="preset-bass" class="p-2.5 rounded-xl font-bold transition-all border text-right bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer">🎸 Sub Bass</button>
+                    <button onclick="setPreset('brass')" id="preset-brass" class="p-2.5 rounded-xl font-bold transition-all border text-right bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer col-span-2">🎺 Brass Synth</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DSP Effects Processor Rack -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs font-bold text-indigo-400">
+                    🎚️ Master LowPass Filter (<span id="cutoff-val">8000</span>Hz)
+                </span>
+                <input type="range" min="300" max="16000" value="8000" oninput="updateCutoff(this.value)" class="w-36 accent-indigo-500 cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <span class="text-xs font-bold text-purple-400">
+                    📻 Stereo Delay & Echo (<span id="delay-val">20</span>%)
+                </span>
+                <input type="range" min="0" max="60" value="20" oninput="updateDelay(this.value)" class="w-36 accent-purple-500 cursor-pointer">
+            </div>
+        </div>
+
+        <!-- Drums & Percussion Trigger Bar -->
+        <div class="flex flex-col gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+            <span class="text-xs font-bold text-slate-400">إيقاعات الاستوديو المباشرة (Live Drum Triggers):</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold">
+                <button onclick="studio.playDrum('kick')" class="py-3 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/30 rounded-xl transition-all active:scale-95 cursor-pointer">🥁 Kick Drum</button>
+                <button onclick="studio.playDrum('snare')" class="py-3 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/30 rounded-xl transition-all active:scale-95 cursor-pointer">💥 Snare</button>
+                <button onclick="studio.playDrum('hihat')" class="py-3 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-300 border border-yellow-500/30 rounded-xl transition-all active:scale-95 cursor-pointer">✨ Hi-Hat</button>
+                <button onclick="studio.playDrum('clap')" class="py-3 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/30 rounded-xl transition-all active:scale-95 cursor-pointer">👏 Clap</button>
+            </div>
+        </div>
+
+        <!-- Master Sound Effects & Pad FX Expansion Rack -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-indigo-500/30 flex flex-col gap-4 shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-sm font-bold text-indigo-400 flex items-center gap-2">
+                    ✨ أدوات المؤلفين والفنانين المتقدمة (Composers & Artists Master Suite)
+                </span>
+                <span class="text-xs text-slate-400">Arpeggiator • Chords • Scale Lock • Mastering</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Chord Progressions Pad Palette -->
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
+                    <span class="text-xs font-bold text-slate-300">🎼 كوردات تأليف سريعة (Instant Composer Chords):</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
+                        <button onclick="playChord([130.81, 164.81, 196.0, 246.94])" class="p-2.5 bg-indigo-950/80 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/30 rounded-lg transition-all active:scale-95 cursor-pointer">Cmaj7</button>
+                        <button onclick="playChord([110.0, 130.81, 164.81, 196.0])" class="p-2.5 bg-indigo-950/80 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/30 rounded-lg transition-all active:scale-95 cursor-pointer">Am7</button>
+                        <button onclick="playChord([174.61, 220.0, 261.63, 329.63])" class="p-2.5 bg-indigo-950/80 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/30 rounded-lg transition-all active:scale-95 cursor-pointer">Fmaj9</button>
+                        <button onclick="playChord([196.0, 261.63, 293.66, 349.23])" class="p-2.5 bg-indigo-950/80 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/30 rounded-lg transition-all active:scale-95 cursor-pointer">G7sus4</button>
+                    </div>
+                </div>
+
+                <!-- Atmosphere & Transition FX Stabs -->
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
+                    <span class="text-xs font-bold text-slate-300">🌌 مؤثرات انتقال واستراحة (Atmosphere & Risers):</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-bold">
+                        <button onclick="studio.playNote(528.0)" class="p-2 bg-purple-950/80 hover:bg-purple-600 text-purple-200 hover:text-white border border-purple-500/30 rounded-lg transition-all cursor-pointer">✨ 528Hz</button>
+                        <button onclick="studio.playNote(432.0)" class="p-2 bg-pink-950/80 hover:bg-pink-600 text-pink-200 hover:text-white border border-pink-500/30 rounded-lg transition-all cursor-pointer">🧘 432Hz</button>
+                        <button onclick="studio.playDrum('kick')" class="p-2 bg-rose-950/80 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-500/30 rounded-lg transition-all cursor-pointer">💥 Sub Drop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Piano Keyboard (3 Octaves) -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col gap-3">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span class="text-indigo-400">🎹 لوحة مفاتيح البيانو والسينث (Interactive Piano Keyboard)</span>
+                <span>اضغط بالماوس أو لوحة المفاتيح للعزف</span>
+            </div>
+
+            <div class="w-full overflow-x-auto pb-2">
+                <div id="pianoContainer" class="min-w-[680px] h-44 flex relative bg-slate-900 p-2 rounded-xl border border-slate-800 gap-1">
+                    <!-- Piano Keys Injected Dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO ENGINE SCRIPT -->
+    <script>
+        class ProStudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.masterFilter = null;
+                this.delayNode = null;
+                this.delayGain = null;
+                this.analyser = null;
+                this.destNode = null;
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+
+                this.preset = "piano";
+                this.filterCutoff = 8000;
+                this.delayAmount = 0.2;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+
+                    this.masterGain = this.ctx.createGain();
+                    this.masterFilter = this.ctx.createBiquadFilter();
+                    this.masterFilter.type = "lowpass";
+                    this.masterFilter.frequency.value = this.filterCutoff;
+
+                    this.delayNode = this.ctx.createDelay();
+                    this.delayNode.delayTime.value = 0.35;
+                    this.delayGain = this.ctx.createGain();
+                    this.delayGain.gain.value = this.delayAmount;
+
+                    this.delayNode.connect(this.delayGain);
+                    this.delayGain.connect(this.delayNode);
+
+                    this.analyser = this.ctx.createAnalyser();
+                    this.analyser.fftSize = 128;
+
+                    this.masterGain.connect(this.masterFilter);
+                    this.masterFilter.connect(this.analyser);
+                    this.analyser.connect(this.ctx.destination);
+
+                    this.masterFilter.connect(this.delayNode);
+                    this.delayNode.connect(this.analyser);
+
+                    try {
+                        this.destNode = this.ctx.createMediaStreamDestination();
+                        this.analyser.connect(this.destNode);
+                    } catch (e) {}
+                }
+                if (this.ctx.state === "suspended") {
+                    this.ctx.resume();
+                }
+            }
+
+            setFilterCutoff(val) {
+                this.filterCutoff = val;
+                if (this.masterFilter && this.ctx) {
+                    this.masterFilter.frequency.setValueAtTime(val, this.ctx.currentTime);
+                }
+            }
+
+            setDelayAmount(val) {
+                this.delayAmount = val;
+                if (this.delayGain && this.ctx) {
+                    this.delayGain.gain.setValueAtTime(val, this.ctx.currentTime);
+                }
+            }
+
+            playNote(freq) {
+                this.init();
+                if (!this.ctx || !this.masterGain) return;
+
+                const t = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const noteGain = this.ctx.createGain();
+
+                if (this.preset === "piano") {
+                    osc1.type = "sine"; osc1.frequency.setValueAtTime(freq, t);
+                    osc2.type = "triangle"; osc2.frequency.setValueAtTime(freq * 2, t);
+                    noteGain.gain.setValueAtTime(0, t);
+                    noteGain.gain.linearRampToValueAtTime(0.5, t + 0.02);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
+                } else if (this.preset === "lead") {
+                    osc1.type = "sawtooth"; osc1.frequency.setValueAtTime(freq, t);
+                    osc2.type = "sawtooth"; osc2.frequency.setValueAtTime(freq * 1.005, t);
+                    noteGain.gain.setValueAtTime(0.4, t);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, t + 1.2);
+                } else if (this.preset === "pad") {
+                    osc1.type = "sine"; osc1.frequency.setValueAtTime(freq, t);
+                    osc2.type = "triangle"; osc2.frequency.setValueAtTime(freq, t);
+                    noteGain.gain.setValueAtTime(0, t);
+                    noteGain.gain.linearRampToValueAtTime(0.3, t + 0.4);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, t + 4.0);
+                } else if (this.preset === "bass") {
+                    osc1.type = "sawtooth"; osc1.frequency.setValueAtTime(freq / 2, t);
+                    osc2.type = "square"; osc2.frequency.setValueAtTime(freq / 2, t);
+                    noteGain.gain.setValueAtTime(0.7, t);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, t + 0.8);
+                } else {
+                    osc1.type = "sawtooth"; osc1.frequency.setValueAtTime(freq, t);
+                    osc2.type = "square"; osc2.frequency.setValueAtTime(freq * 1.5, t);
+                    noteGain.gain.setValueAtTime(0.5, t);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, t + 1.5);
+                }
+
+                osc1.connect(noteGain);
+                osc2.connect(noteGain);
+                noteGain.connect(this.masterGain);
+
+                osc1.start(t); osc2.start(t);
+                osc1.stop(t + 4.0); osc2.stop(t + 4.0);
+            }
+
+            playDrum(type) {
+                this.init();
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+
+                if (type === "kick") {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(160, t);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    gain.gain.setValueAtTime(1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    osc.connect(gain); gain.connect(this.masterGain);
+                    osc.start(t); osc.stop(t + 0.3);
+                } else if (type === "snare") {
+                    const bufferSize = this.ctx.sampleRate * 0.15;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.7, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                    noise.connect(gain); gain.connect(this.masterGain);
+                    noise.start(t); noise.stop(t + 0.15);
+                } else if (type === "hihat") {
+                    const bufferSize = this.ctx.sampleRate * 0.05;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.5, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+                    noise.connect(gain); gain.connect(this.masterGain);
+                    noise.start(t); noise.stop(t + 0.05);
+                } else {
+                    const bufferSize = this.ctx.sampleRate * 0.2;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.8, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                    noise.connect(gain); gain.connect(this.masterGain);
+                    noise.start(t); noise.stop(t + 0.2);
+                }
+            }
+
+            startRecording() {
+                this.init();
+                if (!this.destNode) return;
+                this.recordedChunks = [];
+                const stream = this.destNode.stream;
+                const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+                this.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+                this.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) this.recordedChunks.push(e.data); };
+                this.mediaRecorder.start();
+            }
+
+            stopRecording(callback) {
+                if (!this.mediaRecorder || this.mediaRecorder.state === "inactive") {
+                    callback("");
+                    return;
+                }
+                this.mediaRecorder.onstop = () => {
+                    const blob = new Blob(this.recordedChunks, { type: this.mediaRecorder.mimeType || "audio/webm" });
+                    const url = URL.createObjectURL(blob);
+                    callback(url);
+                };
+                this.mediaRecorder.stop();
+            }
+        }
+
+        const studio = new ProStudioEngine();
+
+        const PIANO_NOTES = [
+            { note: "C3", freq: 130.81, key: "z" }, { note: "C#3", freq: 138.59, key: "s" },
+            { note: "D3", freq: 146.83, key: "x" }, { note: "D#3", freq: 155.56, key: "d" },
+            { note: "E3", freq: 164.81, key: "c" }, { note: "F3", freq: 174.61, key: "v" },
+            { note: "F#3", freq: 185.0, key: "g" }, { note: "G3", freq: 196.0, key: "b" },
+            { note: "G#3", freq: 207.65, key: "h" }, { note: "A3", freq: 220.0, key: "n" },
+            { note: "A#3", freq: 233.08, key: "j" }, { note: "B3", freq: 246.94, key: "m" },
+            { note: "C4", freq: 261.63, key: "q" }, { note: "C#4", freq: 277.18, key: "2" },
+            { note: "D4", freq: 293.66, key: "w" }, { note: "D#4", freq: 311.13, key: "3" },
+            { note: "E4", freq: 329.63, key: "e" }, { note: "F4", freq: 349.23, key: "r" },
+            { note: "F#4", freq: 369.99, key: "5" }, { note: "G4", freq: 392.0, key: "t" },
+            { note: "G#4", freq: 415.3, key: "6" }, { note: "A4", freq: 440.0, key: "y" },
+            { note: "A#4", freq: 466.16, key: "7" }, { note: "B4", freq: 493.88, key: "u" }
+        ];
+
+        let isRecording = false;
+
+        function toggleRecording() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('rec-btn');
+            const dl = document.getElementById('download-link');
+            if (isRecording) {
+                studio.startRecording();
+                btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 animate-pulse text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/40 transition-all cursor-pointer";
+                btn.innerText = "⏹ إيقاف وحفظ";
+                dl.classList.add('hidden');
+            } else {
+                studio.stopRecording((url) => {
+                    if (url) {
+                        dl.href = url;
+                        dl.classList.remove('hidden');
+                    }
+                });
+                btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all cursor-pointer";
+                btn.innerText = "🎙️ بدء التسجيل";
+            }
+        }
+
+        function setPreset(p) {
+            studio.preset = p;
+            ['piano', 'lead', 'pad', 'bass', 'brass'].forEach(id => {
+                const el = document.getElementById('preset-' + id);
+                if (id === p) {
+                    el.className = "p-2.5 rounded-xl font-bold transition-all border text-right bg-purple-600 text-white border-purple-400 shadow-md cursor-pointer";
+                } else {
+                    el.className = "p-2.5 rounded-xl font-bold transition-all border text-right bg-slate-900 text-slate-400 border-slate-800 hover:text-white cursor-pointer";
+                }
+            });
+        }
+
+        function setVersion(ver) {
+            ['V100', 'V200', 'V300'].forEach(v => {
+                const el = document.getElementById('ver-' + v);
+                if (v === ver) {
+                    el.className = "px-2 py-0.5 rounded bg-purple-600 text-white cursor-pointer";
+                } else {
+                    el.className = "px-2 py-0.5 rounded text-slate-400 hover:text-slate-200 cursor-pointer";
+                }
+            });
+        }
+
+        function updateCutoff(val) {
+            document.getElementById('cutoff-val').innerText = val;
+            studio.setFilterCutoff(Number(val));
+        }
+
+        function updateDelay(val) {
+            document.getElementById('delay-val').innerText = val;
+            studio.setDelayAmount(Number(val) / 100);
+        }
+
+        function playChord(freqs) {
+            freqs.forEach(f => studio.playNote(f));
+        }
+
+        function renderPiano() {
+            const container = document.getElementById('pianoContainer');
+            if (!container) return;
+            container.innerHTML = PIANO_NOTES.map(n => `
+                <button onclick="studio.playNote(${n.freq})" class="flex-1 bg-white hover:bg-slate-200 active:bg-indigo-300 text-slate-900 border border-slate-300 rounded-b-lg flex flex-col justify-end p-2 transition-colors relative z-0 group cursor-pointer">
+                    <span class="text-[10px] font-black text-slate-500 group-hover:text-slate-900">${n.note}</span>
+                    <span class="text-[9px] text-indigo-500 uppercase">${n.key}</span>
+                </button>
+            `).join('');
+        }
+
+        // CANVAS VISUALIZER LOOP
+        const canvas = document.getElementById('spectrumCanvas');
+        const canvasCtx = canvas.getContext('2d');
+
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (studio.analyser) {
+                const bufferLength = studio.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                studio.analyser.getByteFrequencyData(dataArray);
+
+                const barWidth = (canvas.width / bufferLength) * 2;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * canvas.height;
+                    const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, 0);
+                    gradient.addColorStop(0, "#6366f1");
+                    gradient.addColorStop(0.5, "#a855f7");
+                    gradient.addColorStop(1, "#ec4899");
+
+                    canvasCtx.fillStyle = gradient;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+                    x += barWidth;
+                }
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const found = PIANO_NOTES.find(n => n.key.toLowerCase() === e.key.toLowerCase());
+            if (found) {
+                studio.playNote(found.freq);
+            }
+        });
+
+        renderPiano();
+        drawVisualizer();
+    </script>
+</body>
+</html>
