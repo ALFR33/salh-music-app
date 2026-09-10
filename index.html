@@ -1,6 +1,503 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salh Alheib Klel Studio - AI Web Music & Video App</title>
+
+  <!-- Tailwind CSS للتصميم -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+    .active-step {
+      background-color: #f97316 !important;
+      color: #000 !important;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+    }
+    .current-step {
+      border: 2px solid #ffffff !important;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- 1. الشريط العلوي Header -->
+  <header class="bg-neutral-900 border-b border-neutral-800 p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center font-black text-neutral-950 text-xl shadow-lg">
+        🎼
+      </div>
+      <div>
+        <h1 class="text-base font-black text-neutral-100 tracking-wider">Salh Alheib Klel Studio</h1>
+        <span class="text-[10px] text-orange-400 font-mono block -mt-1">Web DAW & AI Video Studio</span>
+      </div>
+    </div>
+
+    <!-- أزرار التشغيل والـ BPM -->
+    <div class="flex items-center gap-3">
+      <button id="playBtn" onclick="togglePlay()" class="px-6 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition">
+        ▶ تشغيل الإيقاع
+      </button>
+
+      <div class="flex items-center gap-2 bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800">
+        <span class="text-xs font-mono font-bold text-neutral-400">BPM</span>
+        <input type="number" id="bpmInput" value="120" min="60" max="200" onchange="updateBpm(this.value)" class="w-12 bg-transparent text-center font-mono font-bold text-orange-400 focus:outline-none" />
+      </div>
+    </div>
+
+    <!-- الأقسام والتنقل -->
+    <nav class="flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800">
+      <button onclick="switchTab('ai')" id="tab-ai" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-neutral-950">استوديو الموسيقى</button>
+      <button onclick="switchTab('video')" id="tab-video" class="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-neutral-200">صانع الفيديوهات (Video AI)</button>
+      <button onclick="switchTab('rack')" id="tab-rack" class="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-neutral-200">الموزع (Rack)</button>
+      <button onclick="switchTab('mixer')" id="tab-mixer" class="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-neutral-200">الميكسر (Mixer)</button>
+    </nav>
+
+    <!-- الاشتراك والدفع -->
+    <div class="flex items-center gap-2">
+      <span class="px-2.5 py-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px] font-bold rounded-lg">
+        علامة مائية: Salh Alheib Klel
+      </span>
+      <button onclick="openModal('paymentModal')" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-extrabold rounded-xl shadow-md transition">
+        الاشتراكات ($23/$56)
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. المحتوى الرئيسي -->
+  <main class="flex-1 p-6 max-w-7xl w-full mx-auto flex flex-col gap-6">
+
+    <!-- شاشة الطيف الصوتي Visualizer -->
+    <div class="w-full h-16 bg-neutral-950 rounded-xl border border-neutral-800 overflow-hidden relative">
+      <canvas id="spectrumCanvas" width="800" height="64" class="w-full h-full block"></canvas>
+      <span class="absolute top-1 left-2 text-[9px] font-mono text-orange-400 font-bold uppercase">Master Visualizer</span>
+    </div>
+
+    <!-- قسم الذكاء الاصطناعي الموسيقي AI Studio -->
+    <div id="section-ai" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+        <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">توليد الموسيقى والأغاني بالذكاء الاصطناعي</h2>
+        
+        <label class="text-xs font-bold text-neutral-300">وصف النمط الموسيقي (Sound Prompt)</label>
+        <textarea id="aiPrompt" rows="2" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 focus:outline-none focus:border-orange-500">إيقاع لو-فاي هادئ مع بيانو شرقي وناي</textarea>
+
+        <label class="text-xs font-bold text-neutral-300">كلمات الأغنية (Lyrics)</label>
+        <textarea id="aiLyrics" rows="2" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 focus:outline-none focus:border-amber-500 font-mono">أيها الأمل البعيد، أشرق في قلبي من جديد...</textarea>
+
+        <button onclick="generateAISong()" id="genBtn" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition">
+          توليد الأغنية والموسيقى الآن
+        </button>
+      </div>
+
+      <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+        <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">الأغاني المولدة</h2>
+        <div id="songsList" class="flex flex-col gap-3 max-h-[350px] overflow-y-auto">
+          <div class="p-4 bg-neutral-950 border border-neutral-800 rounded-xl flex items-center justify-between relative">
+            <div>
+              <h3 class="text-xs font-bold text-neutral-100">مقطوعة الفجر الشرقي</h3>
+              <span class="text-[10px] text-orange-400 font-mono">Salh Alheib Klel Studio (Free Watermark)</span>
+            </div>
+            <button onclick="playAISample()" class="px-3 py-1 bg-orange-500 text-neutral-950 text-xs font-bold rounded-lg">استماع</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم صانع الفيديوهات الذكي AI Video Studio -->
+    <div id="section-video" class="hidden grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+        <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">صانع ومحرر الفيديوهات الذكي (Salh Alheib Klel)</h2>
+
+        <!-- تصنيفات سريعة -->
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="setVidPrompt('🌙 مشهد ليل هادئ مع نجوم تتلألأ وأمطار هادئة تتساقط سينمائي')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">🌙 استرخاء ونوم</button>
+          <button onclick="setVidPrompt('❄️ مشهد جبال ثلجية وغابات صنوبرية في الشتاء مع تساقط الثلوج سينمائي')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">❄️ طبيعة وثلوج</button>
+          <button onclick="setVidPrompt('🐾 قطة صغيرة جميلة تلعب في حديقة مشمسة خضراء مع فراشات سينمائية')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">🐾 حيوانات برية</button>
+          <button onclick="setVidPrompt('🕌 مسجد سينمائي فاخر مع أضواء دافئة وشروق الشمس والزخارف الإسلامية')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">🕌 إسلامي وديني</button>
+          <button onclick="setVidPrompt('☀️ شاطئ استوائي مع أمواج هادئة وأشجار النخيل عند غروب الشمس سينمائي')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">☀️ صيف وشواطئ</button>
+          <button onclick="setVidPrompt('🎬 شخص يقف على قمة جبل عند شروق الشمس والغيوم الساحرة سينمائي')" class="p-2 bg-neutral-950 border border-neutral-800 rounded-lg text-[11px] font-bold text-neutral-300">🎬 تحفيز وطاقة</button>
+        </div>
+
+        <label class="text-xs font-bold text-neutral-300">وصف مشهد الفيديو</label>
+        <textarea id="videoPromptText" rows="3" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 focus:outline-none focus:border-orange-500">مشهد جبال ثلجية هادئة وغابات صنوبرية في الشتاء سينمائي</textarea>
+
+        <button onclick="generateVideoSample()" id="vidGenBtn" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition">
+          توليد الفيديو السينمائي الآن
+        </button>
+      </div>
+
+      <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
+        <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">معاينة الفيديو الناتج</h2>
+        <div id="videoContainer" class="flex flex-col items-center justify-center min-h-[250px] bg-neutral-950 rounded-xl border border-neutral-800 p-4 relative overflow-hidden text-center text-neutral-500 text-xs">
+          اختر أحد التصنيفات واضغط توليد الفيديو للمعاينة والتنزيل!
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم الموزع الإيقاعي Channel Rack -->
+    <div id="section-rack" class="hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex-col gap-4">
+      <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">Channel Rack (16-Step Sequencer)</h2>
+      <div id="sequencerGrid" class="flex flex-col gap-3"></div>
+    </div>
+
+    <!-- قسم الميكسر Mixer -->
+    <div id="section-mixer" class="hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex-col gap-4">
+      <h2 class="text-sm font-extrabold text-orange-400 border-b border-neutral-800 pb-2">Studio Mixer Console</h2>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-800 flex flex-col items-center gap-2">
+          <span class="text-xs font-bold text-orange-400">Kick 808</span>
+          <input type="range" min="0" max="1" step="0.05" value="0.9" onchange="audioEngine.setKickVol(this.value)" class="w-full accent-orange-500" />
+        </div>
+        <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-800 flex flex-col items-center gap-2">
+          <span class="text-xs font-bold text-amber-400">Snare Clap</span>
+          <input type="range" min="0" max="1" step="0.05" value="0.8" onchange="audioEngine.setSnareVol(this.value)" class="w-full accent-amber-500" />
+        </div>
+        <div class="bg-neutral-950 p-4 rounded-xl border border-neutral-800 flex flex-col items-center gap-2">
+          <span class="text-xs font-bold text-yellow-400">HiHat Trap</span>
+          <input type="range" min="0" max="1" step="0.05" value="0.7" onchange="audioEngine.setHiHatVol(this.value)" class="w-full accent-yellow-500" />
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- نافذة الاشتراكات PayPal Modal -->
+  <div id="paymentModal" class="hidden fixed inset-0 bg-neutral-950/80 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4 text-center relative">
+      <button onclick="closeModal('paymentModal')" class="absolute top-4 left-4 text-neutral-400 text-xs font-bold">✕ إغلاق</button>
+      <h3 class="text-base font-black text-neutral-100">باقات اشتراك Salh Alheib Studio</h3>
+      <p class="text-xs text-neutral-400">اشترك لإزالة العلامة المائية وتنزيل الفيديوهات بـ HD</p>
+
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="p-3 bg-neutral-950 border border-orange-500/30 rounded-xl">
+          <span class="font-bold text-orange-400 block">شهري</span>
+          <span class="text-lg font-black text-neutral-100">$23</span>
+        </div>
+        <div class="p-3 bg-neutral-950 border border-amber-500/30 rounded-xl">
+          <span class="font-bold text-amber-400 block">سنوي</span>
+          <span class="text-lg font-black text-neutral-100">$56</span>
+        </div>
+      </div>
+
+      <div class="p-3 bg-neutral-950 rounded-xl border border-neutral-800 text-xs font-mono text-amber-400">
+        الدفع عبر PayPal: aalhee34@gmail.com
+      </div>
+
+      <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=aalhee34@gmail.com&item_name=Salh%20Alheib%20Studio%20Subscription&currency_code=USD" target="_blank" class="py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg block">
+        إتمام الاشتراك عبر PayPal
+      </a>
+    </div>
+  </div>
+
+  <!-- 3. البرمجة بالأصوات Pure Web Audio Engine -->
+  <script>
+    class WebAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.analyser = null;
+        this.kickVol = 0.9;
+        this.snareVol = 0.8;
+        this.hiHatVol = 0.7;
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.8;
+
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+
+        this.masterGain.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
+      }
+
+      resume() {
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      }
+
+      setKickVol(v) { this.kickVol = Number(v); }
+      setSnareVol(v) { this.snareVol = Number(v); }
+      setHiHatVol(v) { this.hiHatVol = Number(v); }
+
+      playKick() {
+        this.init(); this.resume();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(38, now + 0.08);
+
+        gain.gain.setValueAtTime(this.kickVol * 1.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }
+
+      playSnare() {
+        this.init(); this.resume();
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.15;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1000;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(this.snareVol, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(now);
+        noise.stop(now + 0.15);
+      }
+
+      playHiHat() {
+        this.init(); this.resume();
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.05;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 7000;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(this.hiHatVol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(now);
+        noise.stop(now + 0.05);
+      }
+    }
+
+    const audioEngine = new WebAudioEngine();
+
+    let isPlaying = false;
+    let bpm = 120;
+    let currentStep = 0;
+    let timerId = null;
+
+    const tracks = [
+      { id: 'kick', name: 'Kick 808', color: '#f97316', steps: [true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false] },
+      { id: 'snare', name: 'Snare Clap', color: '#f59e0b', steps: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
+      { id: 'hihat', name: 'HiHat Trap', color: '#eab308', steps: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true] }
+    ];
+
+    function renderSequencer() {
+      const grid = document.getElementById('sequencerGrid');
+      grid.innerHTML = '';
+
+      tracks.forEach((track) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 p-3 bg-neutral-950 border border-neutral-800 rounded-xl';
+
+        const title = document.createElement('span');
+        title.className = 'text-xs font-bold w-24 truncate';
+        title.style.color = track.color;
+        title.innerText = track.name;
+        row.appendChild(title);
+
+        const stepsDiv = document.createElement('div');
+        stepsDiv.className = 'grid grid-cols-16 gap-1 flex-1';
+
+        track.steps.forEach((active, idx) => {
+          const btn = document.createElement('button');
+          btn.id = `step-${track.id}-${idx}`;
+          btn.className = `h-10 rounded-lg font-mono text-[10px] font-bold transition ${active ? 'active-step' : 'bg-neutral-900 border border-neutral-800 text-neutral-600'}`;
+          btn.innerText = idx + 1;
+          btn.onclick = () => {
+            track.steps[idx] = !track.steps[idx];
+            renderSequencer();
+          };
+          stepsDiv.appendChild(btn);
+        });
+
+        row.appendChild(stepsDiv);
+        grid.appendChild(row);
+      });
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const playBtn = document.getElementById('playBtn');
+      if (isPlaying) {
+        playBtn.innerText = '⏹ إيقاف التشغيل';
+        const intervalMs = (60 / bpm / 4) * 1000;
+        timerId = setInterval(runStep, intervalMs);
+      } else {
+        playBtn.innerText = '▶ تشغيل الإيقاع';
+        clearInterval(timerId);
+        currentStep = 0;
+      }
+    }
+
+    function runStep() {
+      tracks.forEach((track) => {
+        if (track.steps[currentStep]) {
+          if (track.id === 'kick') audioEngine.playKick();
+          if (track.id === 'snare') audioEngine.playSnare();
+          if (track.id === 'hihat') audioEngine.playHiHat();
+        }
+      });
+
+      document.querySelectorAll('.current-step').forEach(e => e.classList.remove('current-step'));
+      tracks.forEach((track) => {
+        const el = document.getElementById(`step-${track.id}-${currentStep}`);
+        if (el) el.classList.add('current-step');
+      });
+
+      currentStep = (currentStep + 1) % 16;
+    }
+
+    function updateBpm(val) {
+      bpm = Number(val);
+      if (isPlaying) {
+        clearInterval(timerId);
+        timerId = setInterval(runStep, (60 / bpm / 4) * 1000);
+      }
+    }
+
+    function switchTab(tab) {
+      document.getElementById('section-ai').classList.add('hidden');
+      document.getElementById('section-video').classList.add('hidden');
+      document.getElementById('section-rack').classList.add('hidden');
+      document.getElementById('section-mixer').classList.add('hidden');
+
+      const el = document.getElementById(`section-${tab}`);
+      el.classList.remove('hidden');
+      if (tab === 'video' || tab === 'ai') el.classList.add('grid');
+      if (tab === 'rack' || tab === 'mixer') el.classList.add('flex');
+    }
+
+    function setVidPrompt(p) {
+      document.getElementById('videoPromptText').value = p;
+    }
+
+    function generateAISong() {
+      const btn = document.getElementById('genBtn');
+      btn.innerText = 'جاري التوليد بالمحرك الذكي...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const prompt = document.getElementById('aiPrompt').value;
+        const list = document.getElementById('songsList');
+        const item = document.createElement('div');
+        item.className = 'p-4 bg-neutral-950 border border-neutral-800 rounded-xl flex items-center justify-between';
+        item.innerHTML = `
+          <div>
+            <h3 class="text-xs font-bold text-neutral-100">${prompt}</h3>
+            <span class="text-[10px] text-orange-400 font-mono">Salh Alheib Klel Studio (Free Watermark)</span>
+          </div>
+          <button onclick="playAISample()" class="px-3 py-1 bg-orange-500 text-neutral-950 text-xs font-bold rounded-lg">استماع</button>
+        `;
+        list.prepend(item);
+        btn.innerText = 'توليد الأغنية والموسيقى الآن';
+        btn.disabled = false;
+        audioEngine.playKick();
+      }, 1200);
+    }
+
+    function generateVideoSample() {
+      const btn = document.getElementById('vidGenBtn');
+      btn.innerText = 'جاري تصوير وتوليد الفيديو...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const prompt = document.getElementById('videoPromptText').value;
+        const container = document.getElementById('videoContainer');
+        container.innerHTML = `
+          <div class="relative w-full rounded-lg overflow-hidden bg-black">
+            <video src="https://storage.googleapis.com/producer-app-public/assets/c2ef9293-3182-4429-be07-97aa893d10ed.mp4" controls autoplay loop class="w-full max-h-64 object-contain"></video>
+            <div class="absolute top-2 right-2 bg-neutral-950/90 text-orange-400 font-extrabold text-[10px] px-2 py-1 rounded shadow border border-orange-500/30">
+              Salh Alheib Klel Studio
+            </div>
+          </div>
+          <p class="text-xs text-neutral-300 font-bold mt-2">${prompt}</p>
+        `;
+        btn.innerText = 'توليد الفيديو السينمائي الآن';
+        btn.disabled = false;
+      }, 1500);
+    }
+
+    function playAISample() {
+      audioEngine.playKick();
+      setTimeout(() => audioEngine.playSnare(), 250);
+      setTimeout(() => audioEngine.playHiHat(), 500);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+    function startVisualizer() {
+      const canvas = document.getElementById('spectrumCanvas');
+      const ctx = canvas.getContext('2d');
+
+      function draw() {
+        requestAnimationFrame(draw);
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (audioEngine.analyser) {
+          const bufferLength = audioEngine.analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+          audioEngine.analyser.getByteFrequencyData(dataArray);
+
+          const barWidth = (canvas.width / bufferLength) * 2;
+          let x = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const barHeight = (dataArray[i] / 255) * canvas.height;
+            ctx.fillStyle = '#f97316';
+            ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+            x += barWidth;
+          }
+        }
+      }
+      draw();
+    }
+
+    window.onload = () => {
+      renderSequencer();
+      startVisualizer();
+    };
+  </script>
+</body>
+</html
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salh Alheib Klel | المكتبة الموسيقية الرسمية</title>
